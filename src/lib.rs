@@ -11,8 +11,11 @@ use axum::{
     Router,
     Extension,
 };
-use tower_http::cors::CorsLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::{
+    cors::CorsLayer,
+    trace::TraceLayer,
+    request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
+};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -23,8 +26,6 @@ use routes::{
     dashboard::dashboard,
     health::{health_check, root, HealthResponse},
 };
-
-// ─── OpenAPI Documentation ───────────────────────────────────────────────────
 
 #[derive(OpenApi)]
 #[openapi(
@@ -71,8 +72,6 @@ impl utoipa::Modify for SecurityAddon {
         }
     }
 }
-
-// ─── App Creation ─────────────────────────────────────────────────────────────
 
 /// Creates the Axum router with all routes and middleware.
 pub async fn create_app() -> Router {
@@ -138,5 +137,7 @@ pub async fn create_app() -> Router {
         .nest("/admin", admin_router)
         .merge(dashboard_router)
         .layer(cors)
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
         .layer(TraceLayer::new_for_http())
 }

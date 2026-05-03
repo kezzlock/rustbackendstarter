@@ -26,7 +26,7 @@ async fn main() {
     let app = create_app().await;
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
-    tracing::info!("🚀 Server listening on http://{}", addr);
+    tracing::info!("Server listening on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

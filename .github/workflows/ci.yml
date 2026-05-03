@@ -1,0 +1,41 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+
+    - name: Check formatting
+      run: cargo fmt --check
+
+    - name: Clippy linter
+      run: cargo clippy -- -D warnings
+
+    - name: Run tests
+      run: cargo test
+      env:
+        # We skip DB tests in CI if no DB is present, 
+        # or use a mock if we had one.
+        # For now, we just ensure it compiles.
+        DATABASE_URL: postgresql://postgres:password@localhost:5432/appdb
+        JWT_SECRET: c2V0X3RoaXNfdG9fYXRfbGVhc3RfMzJfY2hhcnNfbG9uZw==
+        ADMIN_EMAIL: admin@example.com
+        ADMIN_PASSWORD: adminpassword

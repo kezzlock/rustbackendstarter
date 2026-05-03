@@ -11,7 +11,7 @@ pub struct DashboardResponse {
     pub message: String,
 }
 
-/// Get user dashboard (Requires JWT)
+/// Get user dashboard data (Requires JWT)
 #[utoipa::path(
     get,
     path = "/dashboard",

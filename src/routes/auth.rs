@@ -15,14 +15,14 @@ use utoipa::ToSchema;
 
 use crate::{error::AppError, middleware::auth::Claims};
 
-/// Shared app state for routes
+/// Shared app state for authentication routes
 #[derive(Clone)]
 pub struct AuthState {
     pub pool: PgPool,
     pub jwt_secret: String,
 }
 
-// ─── DTOs ─────────────────────────────────────────────────────────────────────
+// Data Transfer Objects
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct RegisterRequest {
@@ -64,7 +64,7 @@ pub struct RegisterResponse {
     pub user_id: Uuid,
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Token constants and helpers
 
 const ACCESS_TOKEN_SECS: i64 = 15 * 60;        // 15 minutes
 const REFRESH_TOKEN_SECS: i64 = 7 * 24 * 3600; // 7 days
@@ -108,7 +108,7 @@ async fn store_refresh_token(
     Ok(())
 }
 
-// ─── Handlers ─────────────────────────────────────────────────────────────────
+// Handlers
 
 /// Register a new user
 #[utoipa::path(

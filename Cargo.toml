@@ -8,7 +8,7 @@ axum = { version = "0.7", features = ["macros"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 tokio = { version = "1", features = ["full"] }
 tower = { version = "0.4", features = ["util"] }
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+tower-http = { version = "0.5", features = ["cors", "trace", "request-id", "util"] }
 tower_governor = { version = "0.4" }
 
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "uuid"] }

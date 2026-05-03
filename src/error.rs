@@ -7,8 +7,6 @@ pub enum AppError {
     #[error("Database error: {0}")]
     Database(#[from] sqlx::Error),
 
-
-
     #[error("Unauthorized: {0}")]
     Unauthorized(String),
 
@@ -56,7 +54,10 @@ impl IntoResponse for AppError {
             }
         };
 
-        let body = Json(json!({ "error": message }));
+        let body = Json(json!({
+            "error": message,
+        }));
+
         (status, body).into_response()
     }
 }

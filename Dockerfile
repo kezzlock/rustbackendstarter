@@ -1,4 +1,3 @@
-# ── Stage 1: Builder ──────────────────────────────────────────────────────────
 FROM rust:1-slim AS builder
 
 # Install build dependencies
@@ -25,7 +24,6 @@ COPY migrations ./migrations
 # Build release binary
 RUN touch src/main.rs && cargo build --release
 
-# ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 FROM debian:bookworm-slim AS runtime
 
 RUN apt-get update && apt-get install -y \
