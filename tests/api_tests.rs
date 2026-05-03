@@ -100,7 +100,7 @@ async fn test_full_auth_flow() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let dash_res: Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(dash_res["role"], "user");
-    
+
     // Wait a second to ensure the refreshed token has a different timestamp
     tokio::time::sleep(std::time::Duration::from_secs(1)).await;
 

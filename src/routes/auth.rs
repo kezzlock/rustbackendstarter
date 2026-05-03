@@ -1,17 +1,17 @@
-use axum::{extract::State, http::StatusCode, Json};
 use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use axum::{extract::State, http::StatusCode, Json};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use chrono::Utc;
 use jsonwebtoken::{encode, EncodingKey, Header};
 use rand::Rng;
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, FromRow};
-use validator::Validate;
-use uuid::Uuid;
+use sqlx::{FromRow, PgPool};
 use utoipa::ToSchema;
+use uuid::Uuid;
+use validator::Validate;
 
 use crate::{error::AppError, middleware::auth::Claims};
 
@@ -62,7 +62,7 @@ pub struct RegisterResponse {
     pub user_id: Uuid,
 }
 
-const ACCESS_TOKEN_SECS: i64 = 15 * 60;        // 15 minutes
+const ACCESS_TOKEN_SECS: i64 = 15 * 60; // 15 minutes
 const REFRESH_TOKEN_SECS: i64 = 7 * 24 * 3600; // 7 days
 
 fn generate_access_token(user_id: &str, role: &str, jwt_secret: &str) -> Result<String, AppError> {
@@ -73,12 +73,13 @@ fn generate_access_token(user_id: &str, role: &str, jwt_secret: &str) -> Result<
         iat: now,
         exp: now + ACCESS_TOKEN_SECS as usize,
     };
-    
+
     encode(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(jwt_secret.as_bytes()),
-    ).map_err(AppError::Jwt)
+    )
+    .map_err(AppError::Jwt)
 }
 
 fn generate_refresh_token() -> String {
@@ -87,20 +88,14 @@ fn generate_refresh_token() -> String {
     URL_SAFE_NO_PAD.encode(bytes)
 }
 
-async fn store_refresh_token(
-    pool: &PgPool,
-    token: &str,
-    user_id: Uuid,
-) -> Result<(), AppError> {
+async fn store_refresh_token(pool: &PgPool, token: &str, user_id: Uuid) -> Result<(), AppError> {
     let expires_at = Utc::now() + chrono::Duration::seconds(REFRESH_TOKEN_SECS);
-    sqlx::query(
-        "INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)"
-    )
-    .bind(token)
-    .bind(user_id)
-    .bind(expires_at)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)")
+        .bind(token)
+        .bind(user_id)
+        .bind(expires_at)
+        .execute(pool)
+        .await?;
     Ok(())
 }
 
@@ -122,12 +117,10 @@ pub async fn register(
     body.validate()
         .map_err(|e| AppError::Validation(e.to_string()))?;
 
-    let existing: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM users WHERE email = $1"
-    )
-    .bind(&body.email)
-    .fetch_one(&state.pool)
-    .await?;
+    let existing: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE email = $1")
+        .bind(&body.email)
+        .fetch_one(&state.pool)
+        .await?;
 
     if existing.0 > 0 {
         return Err(AppError::BadRequest("Email already registered".to_string()));
@@ -140,14 +133,12 @@ pub async fn register(
         .to_string();
 
     let id = Uuid::new_v4();
-    sqlx::query(
-        "INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)"
-    )
-    .bind(id)
-    .bind(&body.email)
-    .bind(password_hash)
-    .execute(&state.pool)
-    .await?;
+    sqlx::query("INSERT INTO users (id, email, password_hash) VALUES ($1, $2, $3)")
+        .bind(id)
+        .bind(&body.email)
+        .bind(password_hash)
+        .execute(&state.pool)
+        .await?;
 
     tracing::info!(user_id = %id, "User registered");
     Ok((StatusCode::CREATED, Json(RegisterResponse { user_id: id })))
@@ -177,17 +168,15 @@ pub async fn login(
     body.validate()
         .map_err(|e| AppError::Validation(e.to_string()))?;
 
-    let row: UserRow = sqlx::query_as(
-        "SELECT id, password_hash, role FROM users WHERE email = $1"
-    )
-    .bind(&body.email)
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or_else(|| AppError::Unauthorized("Invalid credentials".to_string()))?;
+    let row: UserRow = sqlx::query_as("SELECT id, password_hash, role FROM users WHERE email = $1")
+        .bind(&body.email)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or_else(|| AppError::Unauthorized("Invalid credentials".to_string()))?;
 
-    let parsed_hash = PasswordHash::new(&row.password_hash)
-        .map_err(|e| AppError::Argon2(e.to_string()))?;
-    
+    let parsed_hash =
+        PasswordHash::new(&row.password_hash).map_err(|e| AppError::Argon2(e.to_string()))?;
+
     Argon2::default()
         .verify_password(body.password.as_bytes(), &parsed_hash)
         .map_err(|_| AppError::Unauthorized("Invalid credentials".to_string()))?;
@@ -233,7 +222,7 @@ pub async fn refresh(
     let row: RefreshRow = sqlx::query_as(
         "SELECT rt.user_id, u.role FROM refresh_tokens rt \
          JOIN users u ON u.id = rt.user_id \
-         WHERE rt.token = $1 AND rt.expires_at > $2"
+         WHERE rt.token = $1 AND rt.expires_at > $2",
     )
     .bind(&body.refresh_token)
     .bind(now)
@@ -241,12 +230,10 @@ pub async fn refresh(
     .await?
     .ok_or_else(|| AppError::Unauthorized("Invalid or expired refresh token".to_string()))?;
 
-    sqlx::query(
-        "DELETE FROM refresh_tokens WHERE token = $1"
-    )
-    .bind(&body.refresh_token)
-    .execute(&state.pool)
-    .await?;
+    sqlx::query("DELETE FROM refresh_tokens WHERE token = $1")
+        .bind(&body.refresh_token)
+        .execute(&state.pool)
+        .await?;
 
     let user_id = row.user_id;
     let access_token = generate_access_token(&user_id.to_string(), &row.role, &state.jwt_secret)?;
