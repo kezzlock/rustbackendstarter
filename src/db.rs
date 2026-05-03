@@ -35,8 +35,8 @@ pub async fn seed_admin(pool: &PgPool, config: &AppConfig) -> Result<(), AppErro
         return Ok(());
     }
 
-    tracing::info!("No admin found — seeding default admin account");
-
+    tracing::info!("No admin found, seeding default admin account");
+    
     let salt = SaltString::generate(&mut rand::thread_rng());
     let argon2 = Argon2::default();
     let password_hash = argon2
@@ -45,13 +45,17 @@ pub async fn seed_admin(pool: &PgPool, config: &AppConfig) -> Result<(), AppErro
         .to_string();
 
     let id = uuid::Uuid::new_v4();
-    sqlx::query("INSERT INTO users (id, email, password_hash, role) VALUES ($1, $2, $3, 'admin')")
-        .bind(id)
-        .bind(&config.admin_email)
-        .bind(password_hash)
-        .execute(pool)
-        .await?;
+    sqlx::query(
+        "INSERT INTO users (id, email, password_hash, role) \
+         VALUES ($1, $2, $3, 'admin') \
+         ON CONFLICT (email) DO NOTHING"
+    )
+    .bind(id)
+    .bind(&config.admin_email)
+    .bind(password_hash)
+    .execute(pool)
+    .await?;
 
-    tracing::info!(email = %config.admin_email, "Admin account created");
+    tracing::info!(email = %config.admin_email, "Admin seeding check complete");
     Ok(())
 }
