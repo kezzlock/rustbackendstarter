@@ -23,9 +23,7 @@ pub struct DashboardResponse {
         ("bearer_auth" = [])
     )
 )]
-pub async fn dashboard(
-    claims: Claims,
-) -> Result<Json<DashboardResponse>, AppError> {
+pub async fn dashboard(claims: Claims) -> Result<Json<DashboardResponse>, AppError> {
     Ok(Json(DashboardResponse {
         user_id: claims.sub.clone(),
         role: claims.role.clone(),

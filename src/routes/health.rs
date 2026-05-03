@@ -1,8 +1,8 @@
+use crate::error::AppError;
 use axum::{extract::State, Json};
 use serde::Serialize;
 use sqlx::PgPool;
 use utoipa::ToSchema;
-use crate::error::AppError;
 
 #[derive(Serialize, ToSchema)]
 pub struct HealthResponse {
@@ -32,9 +32,7 @@ pub async fn root() -> &'static str {
         (status = 500, description = "System is unhealthy")
     )
 )]
-pub async fn health_check(
-    State(pool): State<PgPool>,
-) -> Result<Json<HealthResponse>, AppError> {
+pub async fn health_check(State(pool): State<PgPool>) -> Result<Json<HealthResponse>, AppError> {
     // Check database connection
     let db_status = match sqlx::query("SELECT 1").execute(&pool).await {
         Ok(_) => "up".to_string(),

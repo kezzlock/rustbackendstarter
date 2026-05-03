@@ -1,6 +1,6 @@
+use rustbackendstarter::{config::AppConfig, create_app};
 use std::net::SocketAddr;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
-use rustbackendstarter::{config::AppConfig, create_app};
 
 #[tokio::main]
 async fn main() {
@@ -32,7 +32,5 @@ async fn main() {
         .await
         .expect("Failed to bind to address");
 
-    axum::serve(listener, app)
-        .await
-        .expect("Server error");
+    axum::serve(listener, app).await.expect("Server error");
 }

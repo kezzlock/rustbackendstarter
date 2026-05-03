@@ -2,8 +2,8 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
-use tower::util::ServiceExt;
 use rustbackendstarter::create_app;
+use tower::util::ServiceExt;
 
 #[tokio::test]
 async fn test_404_not_found() {

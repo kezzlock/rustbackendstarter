@@ -8,23 +8,22 @@ pub mod routes;
 use axum::{
     http::{HeaderValue, Method},
     routing::{get, post},
-    Router,
-    Extension,
+    Extension, Router,
 };
 use tower_http::{
     cors::CorsLayer,
-    trace::TraceLayer,
     request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
+    trace::TraceLayer,
 };
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use config::AppConfig;
 use routes::{
-    admin::{AdminState, list_users},
-    auth::{AuthState, login, refresh, register},
+    admin::{list_users, AdminState},
+    auth::{login, refresh, register, AuthState},
     dashboard::dashboard,
-    health::{health_check, root, HealthResponse},
+    health::{health_check, root},
 };
 
 #[derive(OpenApi)]
@@ -108,9 +107,7 @@ pub async fn create_app() -> Router {
         pool: pool.clone(),
         jwt_secret: config.jwt_secret.clone(),
     };
-    let admin_state = AdminState {
-        pool: pool.clone(),
-    };
+    let admin_state = AdminState { pool: pool.clone() };
 
     let jwt_extension = Extension(config.jwt_secret.clone());
 

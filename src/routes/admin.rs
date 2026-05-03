@@ -2,11 +2,11 @@ use axum::{
     extract::{Query, State},
     Json,
 };
-use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, FromRow};
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use utoipa::{ToSchema, IntoParams};
+use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, PgPool};
+use utoipa::{IntoParams, ToSchema};
+use uuid::Uuid;
 
 use crate::{error::AppError, middleware::auth::AdminClaims};
 
@@ -25,8 +25,12 @@ pub struct PaginationParams {
     pub per_page: i64,
 }
 
-fn default_page() -> i64 { 1 }
-fn default_per_page() -> i64 { 20 }
+fn default_page() -> i64 {
+    1
+}
+fn default_per_page() -> i64 {
+    20
+}
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct UserListItem {
@@ -71,7 +75,7 @@ pub async fn list_users(
     State(state): State<AdminState>,
     Query(params): Query<PaginationParams>,
 ) -> Result<Json<UsersResponse>, AppError> {
-    let per_page = params.per_page.min(100).max(1);
+    let per_page = params.per_page.clamp(1, 100);
     let page = params.page.max(1);
     let offset = (page - 1) * per_page;
 
@@ -80,7 +84,7 @@ pub async fn list_users(
         .await?;
 
     let rows: Vec<UserDbRow> = sqlx::query_as(
-        "SELECT id, email, role, created_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+        "SELECT id, email, role, created_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2",
     )
     .bind(per_page)
     .bind(offset)

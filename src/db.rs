@@ -22,7 +22,10 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), AppError> {
 
 /// Ensure an admin account exists. Creates one from env config if missing.
 pub async fn seed_admin(pool: &PgPool, config: &AppConfig) -> Result<(), AppError> {
-    use argon2::{password_hash::{PasswordHasher, SaltString}, Argon2};
+    use argon2::{
+        password_hash::{PasswordHasher, SaltString},
+        Argon2,
+    };
 
     let exists: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE role = 'admin'")
         .fetch_one(pool)
@@ -42,14 +45,12 @@ pub async fn seed_admin(pool: &PgPool, config: &AppConfig) -> Result<(), AppErro
         .to_string();
 
     let id = uuid::Uuid::new_v4();
-    sqlx::query(
-        "INSERT INTO users (id, email, password_hash, role) VALUES ($1, $2, $3, 'admin')"
-    )
-    .bind(id)
-    .bind(&config.admin_email)
-    .bind(password_hash)
-    .execute(pool)
-    .await?;
+    sqlx::query("INSERT INTO users (id, email, password_hash, role) VALUES ($1, $2, $3, 'admin')")
+        .bind(id)
+        .bind(&config.admin_email)
+        .bind(password_hash)
+        .execute(pool)
+        .await?;
 
     tracing::info!(email = %config.admin_email, "Admin account created");
     Ok(())
