@@ -20,6 +20,7 @@ RUN rm -rf src
 # Copy actual source
 COPY src ./src
 COPY migrations ./migrations
+COPY tests ./tests
 
 # Build release binary
 RUN touch src/main.rs && cargo build --release

@@ -34,3 +34,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 utoipa = { version = "4", features = ["axum_extras", "uuid", "chrono"] }
 utoipa-swagger-ui = { version = "7", features = ["axum"] }
 
+[dev-dependencies]
+http-body-util = "0.1"
+
+
