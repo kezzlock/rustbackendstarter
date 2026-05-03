@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy binary and migrations only — no source code in final image
+# Copy binary and migrations only - no source code in final image
 COPY --from=builder /app/target/release/rustbackendstarter ./rustbackendstarter
 COPY --from=builder /app/migrations ./migrations
 
