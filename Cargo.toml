@@ -1,0 +1,36 @@
+[package]
+name = "rustbackendstarter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7", features = ["macros"] }
+axum-extra = { version = "0.9", features = ["typed-header"] }
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+tower_governor = { version = "0.4" }
+
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "uuid"] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+
+jsonwebtoken = { version = "9" }
+argon2 = { version = "0.5" }
+rand = { version = "0.8" }
+base64 = { version = "0.22" }
+
+validator = { version = "0.18", features = ["derive"] }
+
+dotenvy = { version = "0.15" }
+
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = { version = "1" }
+uuid = { version = "1", features = ["v4", "serde"] }
+utoipa = { version = "4", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-swagger-ui = { version = "7", features = ["axum"] }
+
