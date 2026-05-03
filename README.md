@@ -1,13 +1,14 @@
 # Rust Backend Starter
 
-Production-ready Rust backend with **Axum + PostgreSQL + JWT Auth**, fully containerized.
+Production-ready Rust backend with **Axum + PostgreSQL + JWT Auth**, fully containerized with Docker.
 
-## Stack
+## Tech Stack
 
 | Layer | Crate |
 |---|---|
 | Web framework | `axum` |
 | Database | `sqlx` + PostgreSQL |
+| Documentation | `utoipa` + `swagger-ui` |
 | Auth | `jsonwebtoken` (HS256) |
 | Password hashing | `argon2` (Argon2id) |
 | Validation | `validator` |
@@ -19,69 +20,78 @@ Production-ready Rust backend with **Axum + PostgreSQL + JWT Auth**, fully conta
 
 ## Quick Start (Docker)
 
-Projekt jest zoptymalizowany pod pracę z Dockerem. Nie musisz instalować Rusta ani PostgreSQL lokalnie.
+The project is optimized for Docker. You don't need Rust or PostgreSQL installed locally.
 
-### 1. Konfiguracja środowiska
-Skopiuj przykład i ustaw swoje zmienne (szczególnie `JWT_SECRET` oraz `ADMIN_PASSWORD`):
+### 1. Environment Configuration
+Copy the example environment file and set your variables (especially `JWT_SECRET` and `ADMIN_PASSWORD`):
 ```bash
 cp .env.example .env
 ```
 
-### 2. Uruchomienie projektu
+### 2. Run the Project
 ```bash
 docker compose up --build
 ```
 
-Serwer będzie dostępny pod adresem: `http://localhost:3000`
-Interaktywna dokumentacja API: `http://localhost:3000/docs`
+- **API Server**: `http://localhost:3000`
+- **Interactive API Docs (Swagger)**: `http://localhost:3000/docs`
 
 ---
 
-## Workflow Deweloperski
+## Development Workflow
 
-### Zmiany w kodzie
+### Rebuilding after code changes
+To apply changes made in `.rs` files, rebuild the container:
 ```bash
 docker compose up --build
 ```
 
-### Resetowanie bazy danych
+### Resetting the Database
+To clear all data (e.g., after changing the admin password or SQL migrations):
 ```bash
 docker compose down -v
 docker compose up --build
 ```
+*The `-v` flag removes volumes, including the physical PostgreSQL data files.*
 
 ---
 
-## Testowanie
+## Testing
 
-Najlepiej uruchamiać testy wewnątrz kontenera:
+It is recommended to run tests inside the container to ensure they have access to the database:
+
 ```bash
-docker compose run app cargo test
+docker compose run --rm test
 ```
+
+### Test Structure
+- `tests/api_tests.rs`: Integration tests for the full router using `tower::oneshot` (no network sockets required).
+- Unit tests can be added directly within the `src/` modules.
 
 ---
 
 ## API Reference
 
-### POST /auth/login
-```bash
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com", "password": "twoje_haslo"}'
-```
+### Health & Info
+- `GET /`: Simple welcome message.
+- `GET /health`: System health status (JSON).
 
-### GET /dashboard (JWT)
-```bash
-curl http://localhost:3000/dashboard -H "Authorization: Bearer <TOKEN>"
-```
+### Authentication
+- `POST /auth/register`: Register a new user.
+- `POST /auth/login`: Login and receive access/refresh tokens.
+- `POST /auth/refresh`: Refresh your access token.
+
+### Protected Endpoints
+- `GET /dashboard`: User dashboard (Requires JWT).
+- `GET /admin/users`: List all users (Requires Admin JWT).
 
 ---
 
-## Struktura Projektu
+## Project Structure
 
-- `src/lib.rs`: Główna logika i definicja routera.
-- `src/main.rs`: Entrypoint serwera.
-- `src/routes/`: Handlery API.
-- `src/middleware/`: Auth i zabezpieczenia.
-- `src/db.rs`: Baza danych.
-- `tests/`: Testy integracyjne.
+- `src/lib.rs`: Main logic and router definition (used by `main.rs` and tests).
+- `src/main.rs`: Server entry point.
+- `src/routes/`: API handlers grouped by module.
+- `src/middleware/`: Custom middleware (Auth, etc.).
+- `src/db.rs`: Database connection and migrations.
+- `tests/`: Integration tests.
